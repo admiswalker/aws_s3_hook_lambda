@@ -11,6 +11,14 @@ function gen_s3bucket(scope: cdk.Construct): void {
   });
 }
 
+function gen_lambda(scope: cdk.Construct): void {
+  const hello = new lambda.Function(this, 'HelloHandler', {
+    runtime: lambda.Runtime.NODEJS_14_X, 
+    code: lambda.Code.fromAsset('lib/lambda/hello'),
+    handler: 'index.handler'
+  });
+}
+
 export class InfraStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
@@ -18,6 +26,7 @@ export class InfraStack extends cdk.Stack {
     // S3 bucket
     gen_s3bucket(this);
     
-    //
+    // lambda triggered by s3 hook
+    gen_lambda(this);
   }
 }
