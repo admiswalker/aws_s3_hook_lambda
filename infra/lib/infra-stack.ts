@@ -1,5 +1,7 @@
 import * as cdk from '@aws-cdk/core';
+import * as iam from "@aws-cdk/aws-iam";
 import * as s3 from '@aws-cdk/aws-s3';
+import * as s3notify from '@aws-cdk/aws-s3-notifications'
 import * as lambda from '@aws-cdk/aws-lambda';
 import * as lambdaES from '@aws-cdk/aws-lambda-event-sources';
 
@@ -49,25 +51,52 @@ export class InfraStack extends cdk.Stack {
     super(scope, id, props);
 
     // S3 bucket
-    const s3_rawBucket = new s3.Bucket(this, 's3_rawBucket', {
-      removalPolicy: cdk.RemovalPolicy.DESTROY
+    const s3_raw_bucket = new s3.Bucket(this, 's3-raw-bucket', {
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      autoDeleteObjects: true,
     })
     
-    const s3_procedBucket = new s3.Bucket(this, 's3_preprocessedBucket', {
-      removalPolicy: cdk.RemovalPolicy.DESTROY
+    const s3_proced_bucket = new s3.Bucket(this, 's3-proced-bucket', {
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      autoDeleteObjects: true,
+    })
+
+    /*
+    const lambda_role = new iam.Role(this, "s3-hook-lambda-role", {
+      assumedBy: new iam.ServicePrincipal("lambda.amazonaws.com"),
+      path: "/service-role/",
+      inlinePolicies: {
+        S3Policy: new iam.PolicyDocument({
+          statements: [
+            new iam.PolicyStatement({
+              actions: [
+                "s3:AbortMultipartUpload",
+                "s3:GetObject",
+                "s3:PutObject"
+              ],
+              resources: ["*"]
+            })
+          ]
+        })
+      }
     });
+    */
     
     // lambda triggered by s3 hook
-    const s3Hook_lambda = new lambda.Function(this, 's3Hook_lambda', {
+    const s3_hook_lambda = new lambda.Function(this, 's3-hook-lambda', {
       runtime: lambda.Runtime.PYTHON_3_8,
       code: lambda.Code.fromAsset('lib/lambda/cnvFile'),
-      handler: 'index.handler'
+      handler: 'index.handler',
+//      role: lambda_role
     });
+    s3_raw_bucket.addObjectCreatedNotification(new s3notify.LambdaDestination(s3_hook_lambda))
+    s3_raw_bucket.grantReadWrite(s3_hook_lambda)
     
-    s3Hook_lambda.addEventSource(new lambdaES.S3EventSource(s3_rawBucket, {
+    /*
+    s3_hook_lambda.addEventSource(new lambdaES.S3EventSource(s3_raw_bucket, {
       events: [s3.EventType.OBJECT_CREATED]
     }));
-    
+    */
   }
 }
 
