@@ -6,6 +6,13 @@ print('Loading function')
 
 s3 = boto3.client('s3')
 
+'''
+def writeObject(bucket, key='out.txt'):
+    obj = bucket.Object(fname)
+    obj = s3.Object(bucket, key='out.txt')
+    obj.put( Body='Hello AWS S3!' )
+    return
+'''
 
 def handler(event, context):
     print('in index handler')
@@ -25,10 +32,15 @@ def handler(event, context):
         print('Error getting object {} from bucket {}. Make sure they exist and your bucket is in the same region as this function.'.format(key, bucket))
         raise e
 
+    # Read Object
     print('--- printing object: begin ---')
-    print(response['ContentType'])
-    print(response.decode('utf-8'))
+    print('response[\'ContentType\']:', response['ContentType'])
+    body = response['Body'].read()
+    print('response:', body)
     print('--- printing object: end ---')
+    
+    # Write Object
+#    writeObject(bucket, key='out.txt')
     
     return {
         "bucket: ": bucket,
