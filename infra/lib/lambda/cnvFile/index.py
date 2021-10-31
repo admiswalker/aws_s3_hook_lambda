@@ -25,13 +25,13 @@ def readObject(bucket, key='out.txt'):
     size = response['ContentLength']
     body = response['Body'].read()
     return size, body
-'''
+
 def writeObject(bucket, key='out.txt'):
-    obj = bucket.Object(fname)
+    s3 = boto3.resource('s3')
     obj = s3.Object(bucket, key='out.txt')
     obj.put( Body='Hello AWS S3!' )
     return
-'''
+
 def handler(event, context):
     hooking_bucket, hooking_key = get_hookingBucketNameAndKey(event)
     size, body = readObject(hooking_bucket, hooking_key)
@@ -39,7 +39,7 @@ def handler(event, context):
     print('response:', size, body)
     print('--- printing object: end ---')
     
-#    writeObject(bucket, key='out.txt')
+    writeObject(hooking_bucket, key='out.txt')
     
     return {
         "bucket: ": hooking_bucket,
