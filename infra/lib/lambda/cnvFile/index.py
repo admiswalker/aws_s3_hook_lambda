@@ -1,6 +1,18 @@
+import os
 import json
 import urllib.parse
 import boto3
+
+def get_bucketNameFromEnv():
+    S3_PROCED_BUCKET_NAME = ''
+
+    try:
+        S3_PROCED_BUCKET_NAME = os.environ['S3_PROCED_BUCKET_NAME']
+    except KeyError as e:
+        return {
+            "error": "Parameter name not exists"
+        }
+    return S3_PROCED_BUCKET_NAME
 
 def get_hookingBucketNameAndKey(event):
     bucket = event['Records'][0]['s3']['bucket']['name']
@@ -8,12 +20,12 @@ def get_hookingBucketNameAndKey(event):
     return bucket, key
 
 def readObject(bucket, key='out.txt'):
-    s3 = boto3.client('s3')
+    s3c = boto3.client('s3')
     print('bucket: %s' % bucket)
     print('key: %s' % key)
     
     try:
-        response = s3.get_object(Bucket=bucket, Key=key)
+        response = s3c.get_object(Bucket=bucket, Key=key)
     except Exception as e:
         print(e)
         print('Error getting object {} from bucket {}. Make sure they exist and your bucket is in the same region as this function.'.format(key, bucket))
@@ -27,8 +39,8 @@ def readObject(bucket, key='out.txt'):
     return size, body
 
 def writeObject(bucket, key='out.txt'):
-    s3 = boto3.resource('s3')
-    obj = s3.Object(bucket, key='out.txt')
+    s3r = boto3.resource('s3')
+    obj = s3r.Object(bucket, key='out.txt')
     obj.put( Body='Hello AWS S3!' )
     return
 
@@ -38,8 +50,9 @@ def handler(event, context):
     print('--- printing object: begin ---')
     print('response:', size, body)
     print('--- printing object: end ---')
-    
-    writeObject(hooking_bucket, key='out.txt')
+
+    s3_proced_bucket = get_bucketNameFromEnv()
+    writeObject(s3_proced_bucket, key='out.txt')
     
     return {
         "bucket: ": hooking_bucket,
