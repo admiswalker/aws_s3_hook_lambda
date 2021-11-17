@@ -3,6 +3,23 @@ import json
 import urllib.parse
 import boto3
 
+
+import numpy as np
+from PIL import Image
+def imgPath2mat_rRGB(path):
+    imgRaw = Image.open(path)
+    imgRGB = imgRaw.split()
+    imgR = imgRGB[0]
+    imgG = imgRGB[1]
+    imgB = imgRGB[2]
+    return (imgR, imgG, imgB)
+
+def mat_rRGB2img(path, imgR, imgG, imgB):
+    imgCombined = np.dstack((np.dstack((imgR, imgG)), imgB))
+    imgPIL      = Image.fromarray(imgCombined)
+    imgPIL.save(path)
+
+
 def get_bucketNameFromEnv():
     S3_PROCED_BUCKET_NAME = ''
 
