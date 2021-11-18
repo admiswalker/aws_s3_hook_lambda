@@ -6,3 +6,9 @@ node_modules
 # CDK asset staging directory
 .cdk.staging
 cdk.out
+
+
+# lambda
+lib/lambda/cnvFile/package/
+lib/lambda/cnvFile/.venv/
+lib/lambda/cnvFile/deployment-package.zip

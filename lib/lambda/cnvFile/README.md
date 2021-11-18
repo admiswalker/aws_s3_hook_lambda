@@ -38,9 +38,15 @@ poetry の使い方は，[基本的な使い方 @ Poetry documentation](https://
    $ poetry run python your_script.py
    ```
 5. lockfile の生成  
-   既存の `pyproject.toml` から lockfile を生成する場合は，`$ poetry install` により，ライブラリを install し，`pyproject.toml` から `poetry.lock` を生成する．
+   既存の `pyproject.toml` から lockfile を生成する場合は，以下のコマンドにより，ライブラリを install し，`pyproject.toml` から `poetry.lock` を生成する．
+   ```
+   $ poetry install
+   ```
 
 ## .zip file archive の生成
+
+### .zip archive を作成する環境
+docker で Lambda の実行環境に揃えるとよい．
 
 ### .toml file を pip の requirements.txt 形式へ変換する
 [AWS のドキュメント](https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/python-package.html) では，pip の requirements.txt の形式で .zip file archive 化している．ここでは大事を取って同じプロセスで zip file archive を生成すべく，`pyproject.toml` を `requirements.txt` に変換する．
@@ -54,10 +60,15 @@ $ poetry export -f requirements.txt --output requirements.txt
 $ pip install -r requirements.txt --target ./package
 ```
 
-
 ### 展開した package を .zip file archive 化する
+```
+$ cd package
+$ zip -r ../deployment-package.zip .
+$ cd ..
+```
 
-
-
-
+### .zip file の root に index.py を追加する
+```
+$ zip -g deployment-package.zip index.py
+```
 
