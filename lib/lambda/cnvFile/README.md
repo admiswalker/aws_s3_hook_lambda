@@ -42,14 +42,20 @@ poetry の使い方は，[基本的な使い方 @ Poetry documentation](https://
 
 ## .zip file archive の生成
 
-### pip の requirements.txt の形式へ変換
+### .toml file を pip の requirements.txt 形式へ変換する
 [AWS のドキュメント](https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/python-package.html) では，pip の requirements.txt の形式で .zip file archive 化している．ここでは大事を取って同じプロセスで zip file archive を生成すべく，`pyproject.toml` を `requirements.txt` に変換する．
 
+```
+$ poetry export -f requirements.txt --output requirements.txt
+```
+
+### requirements.txt から package を展開する
+```
+$ pip install -r requirements.txt --target ./package
+```
 
 
-
-
-## deploy
+### 展開した package を .zip file archive 化する
 
 
 
