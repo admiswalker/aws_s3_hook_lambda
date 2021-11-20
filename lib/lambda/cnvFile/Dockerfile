@@ -1,4 +1,3 @@
-
 FROM amazon/aws-lambda-python:3.8.2021.11.08.18
 
 COPY ./* /home/

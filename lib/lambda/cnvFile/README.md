@@ -95,20 +95,20 @@ $ zip -g deployment-package.zip index.py
 ## build process の shell script 化
 build process を自動化するために，ここまでの処理を下記のような shell script にする．
 
-- **<u>build.sh</u>**
-  ```sh
-  #!/bin/bash
-  poetry install
-  poetry export -f requirements.txt --output requirements.txt
-  
-  pip install -r requirements.txt --target ./package
-  
-  cd package
-  zip -r ../deployment-package.zip .
-  cd ..
-  
-  zip -g deployment-package.zip index.py
-  ```
+**<u>build.sh</u>**
+```bash
+#!/bin/bash
+poetry install
+poetry export -f requirements.txt --output requirements.txt
+
+pip install -r requirements.txt --target ./package
+
+cd package
+zip -r ../deployment-package.zip .
+cd ..
+ 
+zip -g deployment-package.zip index.py
+```
 
 ## build 環境と実行環境の統一
 build 環境が実行環境と異なると，Lambd 関数が正常に機能しない場合がある．
@@ -122,13 +122,95 @@ Amazon Linux 2 に Python 3.8 のランタイムを追加した Docker image は
 Docker image は，[`Docker Hub リポジトリ (amazon/aws-lambda-python)`](https://hub.docker.com/r/amazon/aws-lambda-python) や `Amazon ECR リポジトリ (gallery.ecr.aws/lambda/nodejs)` から提供されており，今回は，Docker Hub リポジトリを用いる．厳密に version を固定するため dockerhub の [Tages](https://hub.docker.com/r/amazon/aws-lambda-python/tags) から，厳密に build 日時の明記された image のタグを指定するとよい．
 
 ### build 用の Dockerfile 作成
-ここでは，pipeline で必要となる Docker container の中で Docker container を build する構成の検証を簡素化するため，Docker container の中で Dockerfile を build する構成とする．
+Build に利用する Lambda のランタイムには，Lambda の実行不要な機能は一切 install されていないため，docker に入り対話的に install を試行錯誤することはできない．このため，Dockerfile の build に合わせて Deployment package も build する．
 
-Build 環境を Pipeline に組み込むには，pipeline を実行する Docker container 上で更に build 用の docker container を起動する必要がある．こうした構成は，DinD (Docker in Docker) (あるいは DooD: Docker outside of Docker) と呼び，Docker container とのファイルのやり取りや，pipeline 側の Docker container に docker engine を用意する必要があるなど，構成が複雑となる．
+以下に作成した Dockerfile を示す．
+最後の `./build_deployment_package.sh` を実行すると，`deployment-package.zip` が docker container 内に作成される．
 
+**<u>Dockerfile</u>**
+```Dockerfile
+FROM amazon/aws-lambda-python:3.8.2021.11.08.18
 
+COPY ./* /home/
 
+RUN pip install poetry
+RUN yum install -y zip
 
+RUN cd /home; ./build_deployment_package.sh
+```
+
+### build 用の shell script 作成
+Dockerfile の build を利用して生成した `deployment-package.zip` は，docker container 内に作成される．このため，`docker cp` コマンドを利用して，`deployment-package.zip` を docker container 内から取り出す．
+
+ここでは，docker build 用の shell script に付属する形で，生成物をコピーする．
+
+**<u>build_dockerfile.sh</u>**
+```bash
+#!/bin/bash
+CONTAINER_NAME=gen-deployment-package
+GEN_TARGET=deployment-package.zip
+
+docker build -t $CONTAINER_NAME ./
+sh ./docker_cp.sh $CONTAINER_NAME ./home/$GEN_TARGET .
+sh ./docker_rmi.sh $CONTAINER_NAME
+```
+
+**<u>docker_cp.sh</u>**
+```bash
+#!/bin/bash
+
+# Usage:
+#   CONTAINER_NAME=xxx
+#   ./docker_cp.sh $CONTAINER_NAME ./[copy from the container dir] ./[copy to the host dir]
+
+CONTAINER_NAME=$1
+docker run -d $CONTAINER_NAME:latest
+CONTAINER_ID=$(docker ps | grep $CONTAINER_NAME | awk '{print $1}')
+docker cp $CONTAINER_ID:$2 $3
+docker stop $CONTAINER_ID
+docker rm $CONTAINER_ID
+```
+
+**<u>docker_rmi.sh</u>**
+```
+#!/bin/bash
+
+# Usage:
+#   CONTAINER_NAME=xxx
+#   ./docker_rmi.sh $CONTAINER_NAME
+
+CONTAINER_NAME=$1
+echo $CONTAINER_NAME
+IMAGE_ID_str=$(docker inspect --format="{{.Id}}" $CONTAINER_NAME) # sha256:80a2138b2d88c11a2e556b162d6a42d720aeabc9bc512122b66d6edc86d05037
+IMAGE_ID_str=$(echo `echo "$IMAGE_ID_str" | tr ':' ' '`)          # sha256 80a2138b2d88c11a2e556b162d6a42d720aeabc9bc512122b66d6edc86d05037
+
+for s in $IMAGE_ID_str; do
+    IMAGE_ID=$(echo $s) # get last item
+done
+echo $IMAGE_ID
+docker rmi $IMAGE_ID
+```
+
+### DinD の検証
+Build 環境を Pipeline に組み込むには，pipeline を実行する Docker container 上で更に build 用の docker container を起動する必要がある．こうした構成は，DinD (Docker in Docker) (あるいは DooD: Docker outside of Docker) と呼び，Docker container とのファイルのやり取りや，pipeline 側の Docker container に docker engine を用意する必要がある．
+
+Docker container とのファイルのやり取りには，前述の通り `$ docker cp` コマンドを用いた．
+
+ここでは，docker engine を持つ Docker container を用意し，DinD の動作を local 環境で検証する．
+
+#### build 用 docker image の選定
+Docker Hub が DinD 用の docker image を公開しているので，これ [`docker:stable-dind`](https://hub.docker.com/layers/docker/library/docker/stable-dind/images/sha256-a6b0193cbf4d3c304f3bf6c6c253d88c25a22c6ffe6847fd57a6269e4324745f?context=explore) を利用する．
+
+#### DinD の構成
+以下の build 用のスクリプトを用意した．このタイプの操作は，ホスト側の Docker engin を利用するので，正確には DooD となる．
+
+参考: [コンテナからコンテナを操作する - 二畳半堂](https://blog.nijohando.jp/post/docker-in-docker-docker-outside-of-docker/)
+
+**<u>build_dockerfile_in_docker.sh</u>**
+```bash
+#!/bin/bash
+docker run --rm -it --name dind -v /var/run/docker.sock:/var/run/docker.sock -v $PWD:/home -w /home docker:stable-dind sh build_dockerfile.sh
+```
 
 
 
