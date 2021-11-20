@@ -1,2 +1,2 @@
 #!/bin/bash
-docker build -t amazon/aws-lambda-python:3.8.2021.11.08.18 build ./
+docker run --rm -it --privileged --name dind -v /var/run/docker.sock:/var/run/docker.sock -v $PWD:/home -w /home docker:stable-dind sh build_dockerfile.sh
