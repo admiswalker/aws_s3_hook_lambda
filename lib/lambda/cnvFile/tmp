@@ -1,0 +1,220 @@
+CONTAINER ID   IMAGE                    COMMAND   CREATED          STATUS          PORTS     NAMES
+fb78b57d72ec   gen-deployment-package   "bash"    25 seconds ago   Up 24 seconds             admiring_rosalind
+admis@admis-MS-7A34:/mnt/sd/documents/projects/aws_s3_hook_lambda/lib/lambda/cnvFile$ docker cp fb78b57d72ec:/home/AAA .
+admis@admis-MS-7A34:/mnt/sd/documents/projects/aws_s3_hook_lambda/lib/lambda/cnvFile$ docker cp ^C78b57d72ec:/home/AAA .
+admis@admis-MS-7A34:/mnt/sd/documents/projects/aws_s3_hook_lambda/lib/lambda/cnvFile$ docker inspect
+"docker inspect" requires at least 1 argument.
+See 'docker inspect --help'.
+
+Usage:  docker inspect [OPTIONS] NAME|ID [NAME|ID...]
+
+Return low-level information on Docker objects
+admis@admis-MS-7A34:/mnt/sd/documents/projects/aws_s3_hook_lambda/lib/lambda/cnvFile$ docker inspect a
+[
+    {
+        "Id": "a1c2ca7d947538c23248c07d5e7a746327c0e6da4ef52942d17a1f4e29f1308a",
+        "Created": "2021-11-20T09:23:54.686179265Z",
+        "Path": "/bin/sh",
+        "Args": [
+            "-c",
+            "cd /home; ./build.sh"
+        ],
+        "State": {
+            "Status": "exited",
+            "Running": false,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 0,
+            "ExitCode": 127,
+            "Error": "",
+            "StartedAt": "2021-11-20T09:23:55.047952806Z",
+            "FinishedAt": "2021-11-20T09:23:55.055216457Z"
+        },
+        "Image": "sha256:28510cf9063c03f1ab4425bb665facdf57fc5fb3a0df841bc7641647dc5f2d78",
+        "ResolvConfPath": "/var/lib/docker/containers/a1c2ca7d947538c23248c07d5e7a746327c0e6da4ef52942d17a1f4e29f1308a/resolv.conf",
+        "HostnamePath": "/var/lib/docker/containers/a1c2ca7d947538c23248c07d5e7a746327c0e6da4ef52942d17a1f4e29f1308a/hostname",
+        "HostsPath": "/var/lib/docker/containers/a1c2ca7d947538c23248c07d5e7a746327c0e6da4ef52942d17a1f4e29f1308a/hosts",
+        "LogPath": "",
+        "Name": "/hungry_clarke",
+        "RestartCount": 0,
+        "Driver": "overlay2",
+        "Platform": "linux",
+        "MountLabel": "",
+        "ProcessLabel": "",
+        "AppArmorProfile": "docker-default",
+        "ExecIDs": null,
+        "HostConfig": {
+            "Binds": null,
+            "ContainerIDFile": "",
+            "LogConfig": {
+                "Type": "none",
+                "Config": {}
+            },
+            "NetworkMode": "default",
+            "PortBindings": null,
+            "RestartPolicy": {
+                "Name": "",
+                "MaximumRetryCount": 0
+            },
+            "AutoRemove": false,
+            "VolumeDriver": "",
+            "VolumesFrom": null,
+            "CapAdd": null,
+            "CapDrop": null,
+            "CgroupnsMode": "host",
+            "Dns": null,
+            "DnsOptions": null,
+            "DnsSearch": null,
+            "ExtraHosts": null,
+            "GroupAdd": null,
+            "IpcMode": "private",
+            "Cgroup": "",
+            "Links": null,
+            "OomScoreAdj": 0,
+            "PidMode": "",
+            "Privileged": false,
+            "PublishAllPorts": false,
+            "ReadonlyRootfs": false,
+            "SecurityOpt": null,
+            "UTSMode": "",
+            "UsernsMode": "",
+            "ShmSize": 67108864,
+            "Runtime": "runc",
+            "ConsoleSize": [
+                0,
+                0
+            ],
+            "Isolation": "",
+            "CpuShares": 0,
+            "Memory": 0,
+            "NanoCpus": 0,
+            "CgroupParent": "",
+            "BlkioWeight": 0,
+            "BlkioWeightDevice": null,
+            "BlkioDeviceReadBps": null,
+            "BlkioDeviceWriteBps": null,
+            "BlkioDeviceReadIOps": null,
+            "BlkioDeviceWriteIOps": null,
+            "CpuPeriod": 0,
+            "CpuQuota": 0,
+            "CpuRealtimePeriod": 0,
+            "CpuRealtimeRuntime": 0,
+            "CpusetCpus": "",
+            "CpusetMems": "",
+            "Devices": null,
+            "DeviceCgroupRules": null,
+            "DeviceRequests": null,
+            "KernelMemory": 0,
+            "KernelMemoryTCP": 0,
+            "MemoryReservation": 0,
+            "MemorySwap": 0,
+            "MemorySwappiness": null,
+            "OomKillDisable": false,
+            "PidsLimit": null,
+            "Ulimits": null,
+            "CpuCount": 0,
+            "CpuPercent": 0,
+            "IOMaximumIOps": 0,
+            "IOMaximumBandwidth": 0,
+            "MaskedPaths": [
+                "/proc/asound",
+                "/proc/acpi",
+                "/proc/kcore",
+                "/proc/keys",
+                "/proc/latency_stats",
+                "/proc/timer_list",
+                "/proc/timer_stats",
+                "/proc/sched_debug",
+                "/proc/scsi",
+                "/sys/firmware"
+            ],
+            "ReadonlyPaths": [
+                "/proc/bus",
+                "/proc/fs",
+                "/proc/irq",
+                "/proc/sys",
+                "/proc/sysrq-trigger"
+            ]
+        },
+        "GraphDriver": {
+            "Data": {
+                "LowerDir": "/var/lib/docker/overlay2/e00bc34b2e1e2d774c3ab024f45278864e6fe1100fd1ff83800cf64d22ed11d4-init/diff:/var/lib/docker/overlay2/c6c5cf2346c276732e9611690f18a51eb2a8507e20d137d36d79d6824b1d962d/diff:/var/lib/docker/overlay2/eb21ef8deaa38aa77f3358ed3693c9feb7f81252f85f84d6e167345f2ba157a8/diff",
+                "MergedDir": "/var/lib/docker/overlay2/e00bc34b2e1e2d774c3ab024f45278864e6fe1100fd1ff83800cf64d22ed11d4/merged",
+                "UpperDir": "/var/lib/docker/overlay2/e00bc34b2e1e2d774c3ab024f45278864e6fe1100fd1ff83800cf64d22ed11d4/diff",
+                "WorkDir": "/var/lib/docker/overlay2/e00bc34b2e1e2d774c3ab024f45278864e6fe1100fd1ff83800cf64d22ed11d4/work"
+            },
+            "Name": "overlay2"
+        },
+        "Mounts": [],
+        "Config": {
+            "Hostname": "a1c2ca7d9475",
+            "Domainname": "",
+            "User": "",
+            "AttachStdin": false,
+            "AttachStdout": false,
+            "AttachStderr": false,
+            "Tty": false,
+            "OpenStdin": false,
+            "StdinOnce": false,
+            "Env": [
+                "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+            ],
+            "Cmd": [
+                "/bin/sh",
+                "-c",
+                "cd /home; ./build.sh"
+            ],
+            "Healthcheck": {
+                "Test": [
+                    "NONE"
+                ]
+            },
+            "Image": "sha256:28510cf9063c03f1ab4425bb665facdf57fc5fb3a0df841bc7641647dc5f2d78",
+            "Volumes": null,
+            "WorkingDir": "",
+            "Entrypoint": null,
+            "OnBuild": null,
+            "Labels": {}
+        },
+        "NetworkSettings": {
+            "Bridge": "",
+            "SandboxID": "9425d3555a103f59163ff63f2429d46b629c9036d02a5522ce52d5504015f88b",
+            "HairpinMode": false,
+            "LinkLocalIPv6Address": "",
+            "LinkLocalIPv6PrefixLen": 0,
+            "Ports": {},
+            "SandboxKey": "/var/run/docker/netns/9425d3555a10",
+            "SecondaryIPAddresses": null,
+            "SecondaryIPv6Addresses": null,
+            "EndpointID": "",
+            "Gateway": "",
+            "GlobalIPv6Address": "",
+            "GlobalIPv6PrefixLen": 0,
+            "IPAddress": "",
+            "IPPrefixLen": 0,
+            "IPv6Gateway": "",
+            "MacAddress": "",
+            "Networks": {
+                "bridge": {
+                    "IPAMConfig": null,
+                    "Links": null,
+                    "Aliases": null,
+                    "NetworkID": "d6596e16daa8e0fb3f015f879a3c6b0139b2bd463697f25391ad7ee152475619",
+                    "EndpointID": "",
+                    "Gateway": "",
+                    "IPAddress": "",
+                    "IPPrefixLen": 0,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "MacAddress": "",
+                    "DriverOpts": null
+                }
+            }
+        }
+    }
+]
+admis@admis-MS-7A34:/mnt/sd/documents/projects/aws_s3_hook_lambda/lib/lambda/cnvFile$ 
+

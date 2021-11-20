@@ -10,7 +10,27 @@
 ここでは deployment package を package manager で管理する．
 Package manager には Poetry を用いる．
 
-### Poetry の install と仮想環境の構築
+### Poetry の install
+```
+$ PATH=$PATH:$HOME/.poetry/bin
+```
+1. install
+   コマンド
+   ```
+   $ curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python3
+   ```
+2. path の追加
+   path を追加する．~/.bash_profile に以下を追記する．(何故か ~/.bash_profile が無い場合は，~/.bashrc に追記する)．
+   ```
+   PATH=$PATH:$HOME/.poetry/bin
+   ```
+3. path のロード
+   追記した path をシステムに読み込むには，PC を再起動するか，以下のコマンドを実行する．
+   ```
+   source ~/.bash_profile
+   ```
+
+### Poetry による仮想環境の構築
 poetry の使い方は，[基本的な使い方 @ Poetry documentation](https://cocoatomo.github.io/poetry-ja/basic-usage/) を参照する．
 
 1. 初期化 (`poetry.toml` が生成される)
@@ -71,4 +91,45 @@ $ cd ..
 ```
 $ zip -g deployment-package.zip index.py
 ```
+
+## build process の shell script 化
+build process を自動化するために，ここまでの処理を下記のような shell script にする．
+
+- **<u>build.sh</u>**
+  ```sh
+  #!/bin/bash
+  poetry install
+  poetry export -f requirements.txt --output requirements.txt
+  
+  pip install -r requirements.txt --target ./package
+  
+  cd package
+  zip -r ../deployment-package.zip .
+  cd ..
+  
+  zip -g deployment-package.zip index.py
+  ```
+
+## build 環境と実行環境の統一
+build 環境が実行環境と異なると，Lambd 関数が正常に機能しない場合がある．
+ここでは，Lambda の実行環境と同じ docker image で deployment package を build する．
+
+### build 用の docker image 選定
+[Lambda の実行環境のランタイム](https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/python-image.html)にはいくつかが種類り，ここでは Amazon Linux 2 ベースの Python 3.8 のランタイムを用いる．なお，Python 2.7 などの古いランタイムは[サポート期限](https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/runtime-support-policy.html)が迫っているので，使用しないほうがよい．
+
+Amazon Linux 2 に Python 3.8 のランタイムを追加した Docker image は，[コンテナイメージで Python Lambda 関数をデプロイ](https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/python-image.html)できるように，AWS が base image を用意している．今回は，この Docker image で Deployment package を build する．
+
+Docker image は，[`Docker Hub リポジトリ (amazon/aws-lambda-python)`](https://hub.docker.com/r/amazon/aws-lambda-python) や `Amazon ECR リポジトリ (gallery.ecr.aws/lambda/nodejs)` から提供されており，今回は，Docker Hub リポジトリを用いる．厳密に version を固定するため dockerhub の [Tages](https://hub.docker.com/r/amazon/aws-lambda-python/tags) から，厳密に build 日時の明記された image のタグを指定するとよい．
+
+### build 用の Dockerfile 作成
+ここでは，pipeline で必要となる Docker container の中で Docker container を build する構成の検証を簡素化するため，Docker container の中で Dockerfile を build する構成とする．
+
+Build 環境を Pipeline に組み込むには，pipeline を実行する Docker container 上で更に build 用の docker container を起動する必要がある．こうした構成は，DinD (Docker in Docker) (あるいは DooD: Docker outside of Docker) と呼び，Docker container とのファイルのやり取りや，pipeline 側の Docker container に docker engine を用意する必要があるなど，構成が複雑となる．
+
+
+
+
+
+
+
 
