@@ -17,6 +17,6 @@ do
     elif [[ $str =~ 'not connect to the Docker daemon' ]]; then
 	sleep 1
     else
-        exit
+        exit 0
     fi
 done
