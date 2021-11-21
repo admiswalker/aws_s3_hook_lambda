@@ -203,7 +203,9 @@ $ docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock docker sh
 ```
 
 #### DinD と DooD の比較
-DinD と DooD の比較は[Dockerコンテナ内からDockerを使うことについて](https://esakat.github.io/esakat-blog/posts/docker-in-docker/))にまとまっており，次のように説明されている．
+DinD と DooD を比較すると，DooD の方が遥かに簡素に実装できるため，DooD で済むのであれば DooD を使うことが望ましい．
+
+なお，DinD と DooD の比較は[Dockerコンテナ内からDockerを使うことについて](https://esakat.github.io/esakat-blog/posts/docker-in-docker/))にまとまっており，次のように説明されている．
 > CI用途に関してはDooDを使うのが好ましいと思います. DinDの開発者自身がブログでDinDのCI利用について述べています https://jpetazzo.github.io/2015/09/03/do-not-use-docker-in-docker-for-ci/
 > 
 > ざっと要点
