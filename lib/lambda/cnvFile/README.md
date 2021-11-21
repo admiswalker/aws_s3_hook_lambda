@@ -144,7 +144,7 @@ Dockerfile の build を利用して生成した `deployment-package.zip` は，
 
 ここでは，docker build 用の shell script に付属する形で，生成物をコピーする．
 
-**<u>build_dockerfile.sh</u>**
+[**<u>./build_dockerfile.sh</u>**](./build_dockerfile.sh)
 ```bash
 #!/bin/bash
 CONTAINER_NAME=gen-deployment-package
@@ -155,7 +155,8 @@ sh ./docker_cp.sh $CONTAINER_NAME ./home/$GEN_TARGET .
 sh ./docker_rmi.sh $CONTAINER_NAME
 ```
 
-**<u>docker_cp.sh</u>**
+[**<u>./docker_sh/cp.sh</u>**](./docker_sh/cp.sh)  
+※ docker cp を実行するには，docker container が起動している必要がある．
 ```bash
 #!/bin/bash
 
@@ -167,28 +168,7 @@ CONTAINER_NAME=$1
 docker run -d $CONTAINER_NAME:latest
 CONTAINER_ID=$(docker ps | grep $CONTAINER_NAME | awk '{print $1}')
 docker cp $CONTAINER_ID:$2 $3
-docker stop $CONTAINER_ID
-docker rm $CONTAINER_ID
-```
-
-**<u>docker_rmi.sh</u>**
-```
-#!/bin/bash
-
-# Usage:
-#   CONTAINER_NAME=xxx
-#   ./docker_rmi.sh $CONTAINER_NAME
-
-CONTAINER_NAME=$1
-echo $CONTAINER_NAME
-IMAGE_ID_str=$(docker inspect --format="{{.Id}}" $CONTAINER_NAME) # sha256:80a2138b2d88c11a2e556b162d6a42d720aeabc9bc512122b66d6edc86d05037
-IMAGE_ID_str=$(echo `echo "$IMAGE_ID_str" | tr ':' ' '`)          # sha256 80a2138b2d88c11a2e556b162d6a42d720aeabc9bc512122b66d6edc86d05037
-
-for s in $IMAGE_ID_str; do
-    IMAGE_ID=$(echo $s) # get last item
-done
-echo $IMAGE_ID
-docker rmi $IMAGE_ID
+docker rm -f $CONTAINER_ID
 ```
 
 ### DinD の検証
@@ -201,28 +181,41 @@ Docker container とのファイルのやり取りには，前述の通り `$ do
 #### build 用 docker image の選定
 Docker Hub が DinD 用の docker image を公開しているので，これ [`docker:stable-dind`](https://hub.docker.com/layers/docker/library/docker/stable-dind/images/sha256-a6b0193cbf4d3c304f3bf6c6c253d88c25a22c6ffe6847fd57a6269e4324745f?context=explore) を利用する．
 
-#### DinD の構成
-DinD を構成するには，docker を[`バックグラウンドで起動したあとexecオプションでログインする必要`](http://shomi3023.com/2018/09/01/docker-in-docker/)がある．
+#### DinD の動作テスト
+DinD の動作をテストするには，DinD 用の docker image に `--privileged` オプションで権限を与え，`-d` オプションでバックグラウンド実行したあと，[`exec` オプションでログインする必要](http://shomi3023.com/2018/09/01/docker-in-docker/)がある．(直接 sh で入ると上手く動作しない) ．
 
-
-
-#### DooD の構成
-以下の build 用のスクリプトを用意した．このタイプの操作は，ホスト側の Docker engin を利用するので，正確には DooD となる (参考: [コンテナからコンテナを操作する - 二畳半堂](https://blog.nijohando.jp/post/docker-in-docker-docker-outside-of-docker/))．
-
-なお，`CI用途に関してはDooDを使うのが好ましい` という意見もあるが，状況次第だと思われる
-(参考: [Dockerコンテナ内からDockerを使うことについて](https://esakat.github.io/esakat-blog/posts/docker-in-docker/))．
-
-DinD については，下記も参考にするとよい．
-- [GitLab CI/CDによるDockerイメージのビルド](https://gitlab-docs.creationline.com/ee/ci/docker/using_docker_build.html)
-- [Docker can now run within Docker](https://www.docker.com/blog/docker-can-now-run-within-docker/)
-- [Use Docker to build Docker images](https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#docker-no-such-host-error)
-
-**<u>build_dockerfile_in_docker.sh</u>**
+例えば次のようにする．
 ```bash
-#!/bin/bash
-docker run --rm -it --name dind -v /var/run/docker.sock:/var/run/docker.sock -v $PWD:/home -w /home docker:stable-dind sh build_dockerfile.sh
+$ docker run --privileged --name dind -d docker:19.03.0-dind
+$ docker exec -it dind sh
 ```
 
+DinD の起動プロセスをシェルスクリプトに落とし込む場合には注意が必要で，docker deamon の起動を待機してから `exec` でログインする必要がある．なお，`$ docker info` の結果をもってログインすると，docker deamon が完全に起動していない場合があるため，空の Dockerfile を作成して `$ docker build` を試すとよい．詳細は [./docker_sh/sleep_until_docker_deamon_to_be_ready.sh](./docker_sh/sleep_until_docker_deamon_to_be_ready.sh) を参照すること．
 
+DinD docker container の起動前に build 処理が走り，エラーが発生することは，実際の CI でも起こるため注意すること．(参考: [GitLab CIでdocker imageをビルドする時、docker daemonが起動してくるまで待つ](https://qiita.com/jesus_isao/items/b141b45bf26293894559))
 
+#### DooD の動作テスト
+DooD の動作をテストするには，`-v` オプションを付けて[container 側から host の docker.sock (/var/run/docker.sock) をマウントする](https://blog.nijohando.jp/post/docker-in-docker-docker-outside-of-docker/)必要がある．すると，host 型の docker engine を用いて container が実行される．
+
+例えば，次のようにする．
+```
+$ docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock docker sh
+```
+
+#### DinD と DooD の比較
+DinD と DooD の比較は[Dockerコンテナ内からDockerを使うことについて](https://esakat.github.io/esakat-blog/posts/docker-in-docker/))にまとまっており，次のように説明されている．
+> CI用途に関してはDooDを使うのが好ましいと思います. DinDの開発者自身がブログでDinDのCI利用について述べています https://jpetazzo.github.io/2015/09/03/do-not-use-docker-in-docker-for-ci/
+> 
+> ざっと要点
+> 
+> - そもそものDinDの用途はDockerの開発プロセス高速化のためだった
+> - DinDは次の問題がある
+>   - SELinuxとかをホストとコンテナで別設定にしていると、クラッシュする可能性がある
+>   - ホストとコンテナで別々のファイルシステムを使っているとクラッシュする可能性がある
+>   - /var/lib/dockerはdockerデーモンの専用領域みたいなものだから、別デーモン作って触らせると何が起きても知らないよ
+> - CIをやりたないならDooDでいいんじゃない？
+>   - ホストとDockerデーモンを共有することで、ビルドごとにイメージのキャッシュが消えたりがなくなると思うよ
+>   - 上の問題点も解決すると思うよ
+> 
+> 参考: [Dockerコンテナ内からDockerを使うことについて](https://esakat.github.io/esakat-blog/posts/docker-in-docker/))
 
