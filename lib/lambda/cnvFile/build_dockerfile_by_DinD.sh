@@ -8,5 +8,4 @@ docker run --privileged -d --name $CONTAINER_NAME -v $PWD:/home -w /home $IMAGE_
 CONTAINER_ID=$(docker ps | grep $CONTAINER_NAME | awk '{print $1}')
 docker exec -it $CONTAINER_NAME sh ./build_dockerfile.sh
 
-docker stop $CONTAINER_ID
-docker rm $CONTAINER_ID
+docker rm -f $CONTAINER_ID
