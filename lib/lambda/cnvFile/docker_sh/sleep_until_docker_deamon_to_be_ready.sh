@@ -14,7 +14,7 @@ while :
 do
     echo 'waiting for docker daemon to be ready...'
 
-    str=$(docker exec -it $CONTAINER_NAME docker build ./$TMP_DIR)
+    str=$(docker exec -it $CONTAINER_NAME docker build ./$TMP_DIR 2> /dev/null)
     str_len=${#str}
     if [ $str_len == 0 ]; then
 	sleep 0.5
