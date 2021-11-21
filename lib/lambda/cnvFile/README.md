@@ -202,9 +202,20 @@ Docker container とのファイルのやり取りには，前述の通り `$ do
 Docker Hub が DinD 用の docker image を公開しているので，これ [`docker:stable-dind`](https://hub.docker.com/layers/docker/library/docker/stable-dind/images/sha256-a6b0193cbf4d3c304f3bf6c6c253d88c25a22c6ffe6847fd57a6269e4324745f?context=explore) を利用する．
 
 #### DinD の構成
-以下の build 用のスクリプトを用意した．このタイプの操作は，ホスト側の Docker engin を利用するので，正確には DooD となる．
+DinD を構成するには，docker を[`バックグラウンドで起動したあとexecオプションでログインする必要`](http://shomi3023.com/2018/09/01/docker-in-docker/)がある．
 
-参考: [コンテナからコンテナを操作する - 二畳半堂](https://blog.nijohando.jp/post/docker-in-docker-docker-outside-of-docker/)
+
+
+#### DooD の構成
+以下の build 用のスクリプトを用意した．このタイプの操作は，ホスト側の Docker engin を利用するので，正確には DooD となる (参考: [コンテナからコンテナを操作する - 二畳半堂](https://blog.nijohando.jp/post/docker-in-docker-docker-outside-of-docker/))．
+
+なお，`CI用途に関してはDooDを使うのが好ましい` という意見もあるが，状況次第だと思われる
+(参考: [Dockerコンテナ内からDockerを使うことについて](https://esakat.github.io/esakat-blog/posts/docker-in-docker/))．
+
+DinD については，下記も参考にするとよい．
+- [GitLab CI/CDによるDockerイメージのビルド](https://gitlab-docs.creationline.com/ee/ci/docker/using_docker_build.html)
+- [Docker can now run within Docker](https://www.docker.com/blog/docker-can-now-run-within-docker/)
+- [Use Docker to build Docker images](https://docs.gitlab.com/ee/ci/docker/using_docker_build.html#docker-no-such-host-error)
 
 **<u>build_dockerfile_in_docker.sh</u>**
 ```bash
