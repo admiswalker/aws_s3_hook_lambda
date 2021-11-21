@@ -1,7 +1,7 @@
 # lambda function
 
 
-build process の説明は，[../docs/LambdaDeploymentPackage.md](../docs/LambdaDeploymentPackage.md) を参照すること．
+build process の説明は，[../docs/LambdaDeploymentPackage.md](../../../docs/LambdaDeploymentPackage.md) を参照すること．
 
 
 ## File and Directory descriptions
