@@ -142,9 +142,9 @@ RUN cd /home; ./build_deployment_package.sh
 ### build 用の shell script 作成
 Dockerfile の build を利用して生成した `deployment-package.zip` は，docker container 内に作成される．このため，`docker cp` コマンドを利用して，`deployment-package.zip` を docker container 内から取り出す．
 
-ここでは，docker build 用の shell script に付属する形で，生成物をコピーする．
+ここでは，docker build 用の shell script 内で，生成物をコピーする．
 
-[**<u>./build_dockerfile.sh</u>**](./build_dockerfile.sh)
+[**<u>./build_dockerfile.sh</u>**](../lib/lambda/cnvFile/build_dockerfile.sh)
 ```bash
 #!/bin/bash
 CONTAINER_NAME=gen-deployment-package
@@ -155,7 +155,7 @@ sh ./docker_cp.sh $CONTAINER_NAME ./home/$GEN_TARGET .
 sh ./docker_rmi.sh $CONTAINER_NAME
 ```
 
-[**<u>./docker_sh/cp.sh</u>**](./docker_sh/cp.sh)  
+[**<u>./docker_sh/cp.sh</u>**](../lib/lambda/cnvFile/docker_sh/cp.sh)  
 ※ docker cp を実行するには，docker container が起動している必要がある．
 ```bash
 #!/bin/bash
@@ -171,18 +171,17 @@ docker cp $CONTAINER_ID:$2 $3
 docker rm -f $CONTAINER_ID
 ```
 
-### DinD の検証
-Build 環境を Pipeline に組み込むには，pipeline を実行する Docker container 上で更に build 用の docker container を起動する必要がある．こうした構成は，DinD (Docker in Docker) (あるいは DooD: Docker outside of Docker) と呼び，Docker container とのファイルのやり取りや，pipeline 側の Docker container に docker engine を用意する必要がある．
+### DinD と DooD の検証
+ここでは，DinD と DooD の動作を local 環境で検証する．
 
-Docker container とのファイルのやり取りには，前述の通り `$ docker cp` コマンドを用いた．
+Build プロセスを pipeline へ組み込むには，pipeline を実行する Docker container 内で docker を build する必要がある．Docker の build には docker engine が必要となり，Docker container から Docker engine を利用できる必要がある．
 
-ここでは，docker engine を持つ Docker container を用意し，DinD の動作を local 環境で検証する．
-
-#### build 用 docker image の選定
-Docker Hub が DinD 用の docker image を公開しているので，これ [`docker:stable-dind`](https://hub.docker.com/layers/docker/library/docker/stable-dind/images/sha256-a6b0193cbf4d3c304f3bf6c6c253d88c25a22c6ffe6847fd57a6269e4324745f?context=explore) を利用する．
+Docker container から Docker engine を利用する方法は 2 つあり，あらかじめ docker image に docker engine を install しておく構成を Docker in Docker (以下，DinD)，host OS 側の docker engine を間借りする構成を Docker outside of Docker (以下，DooD) と呼ぶ．
 
 #### DinD の動作テスト
-DinD の動作をテストするには，DinD 用の docker image に `--privileged` オプションで権限を与え，`-d` オプションでバックグラウンド実行したあと，[`exec` オプションでログインする必要](http://shomi3023.com/2018/09/01/docker-in-docker/)がある．(直接 sh で入ると上手く動作しない) ．
+DinD では docker image に docker build 用の docker engine が install されている必要がある．ここでは，Docker Hub が公式に公開している DinD 用の docker image ([`docker:stable-dind`](https://hub.docker.com/layers/docker/library/docker/stable-dind/images/sha256-a6b0193cbf4d3c304f3bf6c6c253d88c25a22c6ffe6847fd57a6269e4324745f?context=explore)) を用いる．
+
+DinD の動作をテストするには，DinD 用の docker image に `--privileged` オプションで権限を与え，`-d` オプションでバックグラウンド実行したあと，[`exec` オプションでログインする必要](http://shomi3023.com/2018/09/01/docker-in-docker/)がある (直接 sh で入ると上手く動作しない) ．
 
 例えば次のようにする．
 ```bash
@@ -190,12 +189,12 @@ $ docker run --privileged --name dind -d docker:19.03.0-dind
 $ docker exec -it dind sh
 ```
 
-DinD の起動プロセスをシェルスクリプトに落とし込む場合には注意が必要で，docker deamon の起動を待機してから `exec` でログインする必要がある．なお，`$ docker info` の結果をもってログインすると，docker deamon が完全に起動していない場合があるため，空の Dockerfile を作成して `$ docker build` を試すとよい．詳細は [./docker_sh/sleep_until_docker_deamon_to_be_ready.sh](./docker_sh/sleep_until_docker_deamon_to_be_ready.sh) を参照すること．
-
-DinD docker container の起動前に build 処理が走り，エラーが発生することは，実際の CI でも起こるため注意すること．(参考: [GitLab CIでdocker imageをビルドする時、docker daemonが起動してくるまで待つ](https://qiita.com/jesus_isao/items/b141b45bf26293894559))
+DinD の起動プロセスを shell script に落とし込む場合には注意が必要で，docker deamon の起動を待機してから `exec` でログインする必要がある．また，`$ docker info` により docker deamon の起動を判定すると，docker deamon が完全に起動していない場合がある．
+ここでは `$ docker build` したいため，空の Dockerfile を作成して実際に `$ docker build` できるかどうがで docker deamon が起動したかどうかを判断するとよい．(処理の詳細は [./docker_sh/sleep_until_docker_deamon_to_be_ready.sh](../lib/lambda/cnvFile/docker_sh/sleep_until_docker_deamon_to_be_ready.sh) を参照)．
+Docker deameon の起動を待機しないために，実際の CI でもエラーが発生しているので注意すること．(参考: [GitLab CIでdocker imageをビルドする時、docker daemonが起動してくるまで待つ](https://qiita.com/jesus_isao/items/b141b45bf26293894559))
 
 #### DooD の動作テスト
-DooD の動作をテストするには，`-v` オプションを付けて[container 側から host の docker.sock (/var/run/docker.sock) をマウントする](https://blog.nijohando.jp/post/docker-in-docker-docker-outside-of-docker/)必要がある．すると，host 型の docker engine を用いて container が実行される．
+DooD の動作をテストするには，`-v` オプションを付けて[container 側から host の docker.sock (/var/run/docker.sock) をマウントする](https://blog.nijohando.jp/post/docker-in-docker-docker-outside-of-docker/)必要がある．すると，host 型の docker engine を用いて container が実行できる．
 
 例えば，次のようにする．
 ```
@@ -205,7 +204,7 @@ $ docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock docker sh
 #### DinD と DooD の比較
 DinD と DooD を比較すると，DooD の方が遥かに簡素に実装できるため，DooD で済むのであれば DooD を使うことが望ましい．
 
-なお，DinD と DooD の比較は[Dockerコンテナ内からDockerを使うことについて](https://esakat.github.io/esakat-blog/posts/docker-in-docker/))にまとまっており，次のように説明されている．
+なお，DinD と DooD の比較は「[Dockerコンテナ内からDockerを使うことについて](https://esakat.github.io/esakat-blog/posts/docker-in-docker/)」にまとまっており，次のように説明されている．
 > CI用途に関してはDooDを使うのが好ましいと思います. DinDの開発者自身がブログでDinDのCI利用について述べています https://jpetazzo.github.io/2015/09/03/do-not-use-docker-in-docker-for-ci/
 > 
 > ざっと要点
@@ -220,4 +219,3 @@ DinD と DooD を比較すると，DooD の方が遥かに簡素に実装でき�
 >   - 上の問題点も解決すると思うよ
 > 
 > 参考: [Dockerコンテナ内からDockerを使うことについて](https://esakat.github.io/esakat-blog/posts/docker-in-docker/))
-
