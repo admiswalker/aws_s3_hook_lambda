@@ -22,7 +22,7 @@ do
     #echo 'waiting docker daemon...'
     #sleep 1
 
-    str=$(docker exec -it $CONTAINER_NAME docker pull $IMAGE_NAME)
+    str=$(docker exec -it $CONTAINER_NAME docker build ./docker_sh/for_check_the_docker_deamon_running)
     echo '$str'
     echo $str
     str_len=${#str}
