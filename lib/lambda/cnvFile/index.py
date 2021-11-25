@@ -62,26 +62,16 @@ def writeObject(bucket, key='out.txt'):
 
 
 def call_by_object(up_path, dl_path):
-    print('')
-    print('--- dl_path ---')
-    print(dl_path)
-    print('')
-    
-    print('--- up_path ---')
-    print(up_path)
-    print('')
-    cmd = ('touch %s' % up_path)
-    os.system(cmd)
-    cmd = ('echo "abcdef2021_1126" >> %s' % up_path)
-    os.system(cmd)
-    return
 
-#def mkdir(path):
-#    os.makedirs(path, exist_ok=True)
+    # cnv img
+    imgR, imgG, imgB = imgPath2mat_rRGB(dl_path)
+    imgG = 0.5 * imgG
+    mat_rRGB2img(up_path, imgR, imgG, imgB)
+    
+    return
 
 def handler(event, context):
     s3c = boto3.client('s3')
-#    s3r = boto3.resource('s3')
     
     s3_up_bucket = get_bucketNameFromEnv('S3_PROCED_BUCKET_NAME')
     
@@ -102,20 +92,6 @@ def handler(event, context):
         up_key = '2021_1126.txt'
         s3c.upload_file(up_path, '{}'.format(s3_up_bucket), up_key)
         
-    '''
-    size, body = readObject(hooking_bucket, hooking_key)
-    print('--- printing object: begin ---')
-    print('response:', size, body)
-    print('--- printing object: end ---')
-
-    path_r=io.BytesIO(body)
-    imgR, imgG, imgB = imgPath2mat_rRGB(path_r)
-    imgG = 0.5 * imgG
-    raw_w
-    path_w=io.BytesIO(raw_w)
-    mat_rRGB2img(path_w, imgR, imgG, imgB)
-    '''
-    
     return {
         "bucket: ": hooking_bucket,
         "key: ": hooking_key
