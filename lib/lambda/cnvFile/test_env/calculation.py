@@ -18,7 +18,10 @@ def mat_rRGB2img(path, imgR, imgG, imgB):
 def call_by_object(up_path, dl_path):
     # cnv img
     imgR, imgG, imgB = imgPath2mat_rRGB(dl_path)
-    imgG = 0.5 * imgG
-    mat_rRGB2img(up_path, imgR, imgG, imgB)
+    imgG_f64 = np.array(imgG, np.uint8).astype(np.float64)
+    
+    imgG_f64 = 0.5 * imgG_f64
+    imgG_u8 = imgG_f64.astype(np.uint8)
+    mat_rRGB2img(up_path, imgR, imgG_u8, imgB)
     
     return

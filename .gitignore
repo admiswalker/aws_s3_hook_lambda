@@ -13,3 +13,5 @@ lib/lambda/cnvFile/package/
 lib/lambda/cnvFile/.venv/
 lib/lambda/cnvFile/deployment-package.zip
 tmp_*
+__pycache__/
+out.png
