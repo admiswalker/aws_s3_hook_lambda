@@ -1,3 +1,4 @@
+import os
 import uuid
 import urllib
 import boto3
@@ -26,17 +27,17 @@ def handler(event, context):
         hooking_key = urllib.parse.unquote_plus(record['s3']['object']['key'])
         tmp_key = hooking_key.replace('/', '')
         
+        up_key = 'out.png'
         rand = uuid.uuid4()
         dl_path = '/tmp/dl-{}{}'.format(rand, tmp_key) # download
-        up_path = '/tmp/up-{}'.format(rand, tmp_key) # upload
+        up_path = '/tmp/up-{}{}'.format(rand, tmp_key, up_key) # upload
         print(dl_path)
         print(up_path)
         s3c.download_file(hooking_bucket, hooking_key, dl_path)
         
         calculation.call_by_object(up_path, dl_path)
-
-        up_key = '2021_1126.txt'
-        s3c.upload_file(up_path, '{}'.format(s3_up_bucket), up_key)
+        
+        s3c.upload_file(up_path, s3_up_bucket, up_key)
         
     return {
         "bucket: ": hooking_bucket,
