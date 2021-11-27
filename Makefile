@@ -19,5 +19,5 @@ lambda_fn:
 
 .PHONY: clean
 clean:
-	@echo "No rule to clean."
+	cd ./lib/lambda/cnvFile/; make clean
 
