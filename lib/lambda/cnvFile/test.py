@@ -1,5 +1,4 @@
 import calculation as clc
-import os
 
 
 def test():

@@ -9,3 +9,4 @@ zip -r ../deployment-package.zip .
 cd ..
 
 zip -g deployment-package.zip index.py
+zip -g deployment-package.zip calculation.py
